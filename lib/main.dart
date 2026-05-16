@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'core/router/app_router.dart';
+import 'core/theme/app_theme.dart';
 import 'services/app_bootstrap_service.dart';
 
 Future<void> main() async {
@@ -13,16 +15,11 @@ class LogLineApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'LogLine',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2563EB)),
-        useMaterial3: true,
-      ),
-      home: const Scaffold(
-        body: Center(child: Text('LogLine boilerplate is ready.')),
-      ),
+      theme: AppTheme.light(),
+      routerConfig: AppRouter.router,
     );
   }
 }

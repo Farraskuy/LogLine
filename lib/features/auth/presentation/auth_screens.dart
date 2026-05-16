@@ -1,0 +1,285 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../core/router/app_route_paths.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/logline_button.dart';
+import '../../../shared/widgets/logline_text_field.dart';
+
+class LoginScreen extends StatelessWidget {
+  const LoginScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _AuthFrame(
+      title: 'Masuk ke LogLine',
+      subtitle: 'Lanjutkan catatan dan logbook yang sudah tersinkron.',
+      children: [
+        const LogLineTextField(
+          label: 'Email',
+          hint: 'nama@email.com',
+          prefixIcon: Icons.mail_outline,
+        ),
+        const SizedBox(height: 18),
+        const LogLineTextField(
+          label: 'Password',
+          hint: '••••••••',
+          obscureText: true,
+          prefixIcon: Icons.lock_outline,
+        ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: () => context.go(AppRoutePaths.forgotPassword),
+            child: const Text('Lupa password?'),
+          ),
+        ),
+        const SizedBox(height: 10),
+        LogLineButton(
+          label: 'Masuk',
+          onPressed: () => context.go(AppRoutePaths.notes),
+        ),
+        const SizedBox(height: 14),
+        LogLineButton(
+          label: 'Masuk dengan Google',
+          variant: LogLineButtonVariant.secondary,
+          icon: Icons.g_mobiledata_rounded,
+          onPressed: () => context.go(AppRoutePaths.notes),
+        ),
+        const SizedBox(height: 22),
+        TextButton(
+          onPressed: () => context.go(AppRoutePaths.register),
+          child: const Center(child: Text('Belum punya akun? Daftar')),
+        ),
+      ],
+    );
+  }
+}
+
+class RegisterScreen extends StatelessWidget {
+  const RegisterScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _AuthFrame(
+      title: 'Buat akun baru',
+      subtitle: 'Mulai dari note pribadi, lalu undang tim saat perlu.',
+      children: [
+        const LogLineTextField(
+          label: 'Nama lengkap',
+          hint: 'Ari Farhan',
+          prefixIcon: Icons.person_outline,
+        ),
+        const SizedBox(height: 16),
+        const LogLineTextField(
+          label: 'Email',
+          hint: 'ari@email.com',
+          prefixIcon: Icons.mail_outline,
+        ),
+        const SizedBox(height: 16),
+        const LogLineTextField(
+          label: 'Password',
+          hint: 'Minimal 8 karakter',
+          obscureText: true,
+          prefixIcon: Icons.lock_outline,
+        ),
+        const SizedBox(height: 24),
+        LogLineButton(
+          label: 'Daftar',
+          variant: LogLineButtonVariant.success,
+          onPressed: () => context.go(AppRoutePaths.notes),
+        ),
+        const SizedBox(height: 14),
+        LogLineButton(
+          label: 'Daftar dengan Google',
+          variant: LogLineButtonVariant.secondary,
+          icon: Icons.g_mobiledata_rounded,
+          onPressed: () => context.go(AppRoutePaths.notes),
+        ),
+        const SizedBox(height: 18),
+        TextButton(
+          onPressed: () => context.go(AppRoutePaths.login),
+          child: const Center(child: Text('Sudah punya akun? Masuk')),
+        ),
+      ],
+    );
+  }
+}
+
+class ForgotPasswordScreen extends StatelessWidget {
+  const ForgotPasswordScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _AuthFrame(
+      showBack: true,
+      title: 'Lupa password?',
+      subtitle: 'Masukkan email akun. Kami akan mengirim kode verifikasi.',
+      children: [
+        const SizedBox(height: 32),
+        const Icon(
+          Icons.mark_email_read_outlined,
+          size: 92,
+          color: AppColors.primary,
+        ),
+        const SizedBox(height: 32),
+        const LogLineTextField(label: 'Email', hint: 'nama@email.com'),
+        const SizedBox(height: 24),
+        LogLineButton(
+          label: 'Kirim kode',
+          onPressed: () => context.go(AppRoutePaths.otp),
+        ),
+        TextButton(
+          onPressed: () => context.go(AppRoutePaths.login),
+          child: const Center(child: Text('Kembali ke login')),
+        ),
+      ],
+    );
+  }
+}
+
+class OtpScreen extends StatelessWidget {
+  const OtpScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _AuthFrame(
+      showBack: true,
+      title: 'Verifikasi kode',
+      subtitle: 'Kode 4 digit sudah dikirim ke email kamu.',
+      children: [
+        const SizedBox(height: 48),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            '2',
+            '4',
+            '8',
+            '1',
+          ].map((n) => _OtpBox(number: n)).toList(),
+        ),
+        const SizedBox(height: 36),
+        LogLineButton(
+          label: 'Verifikasi',
+          variant: LogLineButtonVariant.success,
+          onPressed: () => context.go(AppRoutePaths.resetPassword),
+        ),
+        TextButton(
+          onPressed: () {},
+          child: const Center(child: Text('Kirim ulang dalam 00:24')),
+        ),
+      ],
+    );
+  }
+}
+
+class ResetPasswordScreen extends StatelessWidget {
+  const ResetPasswordScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _AuthFrame(
+      showBack: true,
+      title: 'Reset password',
+      subtitle: 'Buat password baru agar semua logbook tetap aman.',
+      children: [
+        const SizedBox(height: 30),
+        const LogLineTextField(
+          label: 'Password baru',
+          hint: '••••••••',
+          obscureText: true,
+        ),
+        const SizedBox(height: 16),
+        const LogLineTextField(
+          label: 'Konfirmasi password',
+          hint: '••••••••',
+          obscureText: true,
+        ),
+        const SizedBox(height: 28),
+        LogLineButton(
+          label: 'Simpan password',
+          onPressed: () => context.go(AppRoutePaths.login),
+        ),
+      ],
+    );
+  }
+}
+
+class _AuthFrame extends StatelessWidget {
+  const _AuthFrame({
+    required this.title,
+    required this.subtitle,
+    required this.children,
+    this.showBack = false,
+  });
+
+  final String title;
+  final String subtitle;
+  final List<Widget> children;
+  final bool showBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: showBack
+          ? AppBar(
+              leading: IconButton(
+                onPressed: () => context.pop(),
+                icon: const Icon(Icons.arrow_back_rounded),
+              ),
+            )
+          : null,
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(28),
+          children: [
+            const Icon(
+              Icons.note_alt_rounded,
+              color: AppColors.primary,
+              size: 46,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 29, fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              subtitle,
+              style: const TextStyle(color: AppColors.muted, height: 1.4),
+            ),
+            const SizedBox(height: 34),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _OtpBox extends StatelessWidget {
+  const _OtpBox({required this.number});
+
+  final String number;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 66,
+      height: 66,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: number == '8' ? AppColors.primary : AppColors.border,
+        ),
+      ),
+      child: Text(
+        number,
+        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
+      ),
+    );
+  }
+}
