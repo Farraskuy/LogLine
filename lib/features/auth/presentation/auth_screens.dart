@@ -3,11 +3,44 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_route_paths.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../services/auth_service.dart';
 import '../../../shared/widgets/logline_button.dart';
 import '../../../shared/widgets/logline_text_field.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final AuthService _authService = AuthService();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _loading = false;
+
+  Future<void> _login() async {
+    setState(() => _loading = true);
+    try {
+      await _authService.login(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+      if (mounted) context.go(AppRoutePaths.notes);
+    } on AuthException catch (error) {
+      if (mounted) _showMessage(context, error.message);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,17 +48,19 @@ class LoginScreen extends StatelessWidget {
       title: 'Masuk ke LogLine',
       subtitle: 'Lanjutkan catatan dan logbook yang sudah tersinkron.',
       children: [
-        const LogLineTextField(
+        LogLineTextField(
           label: 'Email',
           hint: 'nama@email.com',
           prefixIcon: Icons.mail_outline,
+          controller: _emailController,
         ),
         const SizedBox(height: 18),
-        const LogLineTextField(
+        LogLineTextField(
           label: 'Password',
-          hint: '••••••••',
+          hint: 'Password',
           obscureText: true,
           prefixIcon: Icons.lock_outline,
+          controller: _passwordController,
         ),
         Align(
           alignment: Alignment.centerRight,
@@ -36,15 +71,8 @@ class LoginScreen extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         LogLineButton(
-          label: 'Masuk',
-          onPressed: () => context.go(AppRoutePaths.notes),
-        ),
-        const SizedBox(height: 14),
-        LogLineButton(
-          label: 'Masuk dengan Google',
-          variant: LogLineButtonVariant.secondary,
-          icon: Icons.g_mobiledata_rounded,
-          onPressed: () => context.go(AppRoutePaths.notes),
+          label: _loading ? 'Memproses...' : 'Masuk',
+          onPressed: _loading ? null : _login,
         ),
         const SizedBox(height: 22),
         TextButton(
@@ -56,8 +84,37 @@ class LoginScreen extends StatelessWidget {
   }
 }
 
-class RegisterScreen extends StatelessWidget {
+class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
+
+  @override
+  State<RegisterScreen> createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
+  final AuthService _authService = AuthService();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _loading = false;
+
+  Future<void> _register() async {
+    setState(() => _loading = true);
+    await _authService.register(
+      name: _nameController.text,
+      email: _emailController.text,
+      password: _passwordController.text,
+    );
+    if (mounted) context.go(AppRoutePaths.notes);
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,36 +122,31 @@ class RegisterScreen extends StatelessWidget {
       title: 'Buat akun baru',
       subtitle: 'Mulai dari note pribadi, lalu undang tim saat perlu.',
       children: [
-        const LogLineTextField(
+        LogLineTextField(
           label: 'Nama lengkap',
           hint: 'Ari Farhan',
           prefixIcon: Icons.person_outline,
+          controller: _nameController,
         ),
         const SizedBox(height: 16),
-        const LogLineTextField(
+        LogLineTextField(
           label: 'Email',
           hint: 'ari@email.com',
           prefixIcon: Icons.mail_outline,
+          controller: _emailController,
         ),
         const SizedBox(height: 16),
-        const LogLineTextField(
+        LogLineTextField(
           label: 'Password',
           hint: 'Minimal 8 karakter',
           obscureText: true,
           prefixIcon: Icons.lock_outline,
+          controller: _passwordController,
         ),
         const SizedBox(height: 24),
         LogLineButton(
-          label: 'Daftar',
-          variant: LogLineButtonVariant.success,
-          onPressed: () => context.go(AppRoutePaths.notes),
-        ),
-        const SizedBox(height: 14),
-        LogLineButton(
-          label: 'Daftar dengan Google',
-          variant: LogLineButtonVariant.secondary,
-          icon: Icons.g_mobiledata_rounded,
-          onPressed: () => context.go(AppRoutePaths.notes),
+          label: _loading ? 'Mendaftarkan...' : 'Daftar',
+          onPressed: _loading ? null : _register,
         ),
         const SizedBox(height: 18),
         TextButton(
@@ -186,13 +238,13 @@ class ResetPasswordScreen extends StatelessWidget {
         const SizedBox(height: 30),
         const LogLineTextField(
           label: 'Password baru',
-          hint: '••••••••',
+          hint: 'Password baru',
           obscureText: true,
         ),
         const SizedBox(height: 16),
         const LogLineTextField(
           label: 'Konfirmasi password',
-          hint: '••••••••',
+          hint: 'Konfirmasi password',
           obscureText: true,
         ),
         const SizedBox(height: 28),
@@ -282,4 +334,8 @@ class _OtpBox extends StatelessWidget {
       ),
     );
   }
+}
+
+void _showMessage(BuildContext context, String message) {
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
 }

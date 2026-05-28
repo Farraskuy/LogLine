@@ -6,7 +6,9 @@ import 'services/app_bootstrap_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await AppBootstrapService().initialize();
+
   runApp(const LogLineApp());
 }
 

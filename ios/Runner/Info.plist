@@ -66,5 +66,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>LogLine menggunakan kamera untuk mengambil gambar catatan sebelum OCR.</string>
 </dict>
 </plist>

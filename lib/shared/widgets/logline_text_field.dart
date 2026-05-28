@@ -10,6 +10,7 @@ class LogLineTextField extends StatelessWidget {
     this.obscureText = false,
     this.maxLines = 1,
     this.prefixIcon,
+    this.controller,
   });
 
   final String label;
@@ -17,6 +18,7 @@ class LogLineTextField extends StatelessWidget {
   final bool obscureText;
   final int maxLines;
   final IconData? prefixIcon;
+  final TextEditingController? controller;
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +34,7 @@ class LogLineTextField extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         TextField(
+          controller: controller,
           obscureText: obscureText,
           maxLines: obscureText ? 1 : maxLines,
           decoration: InputDecoration(

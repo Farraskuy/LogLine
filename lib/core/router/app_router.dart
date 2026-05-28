@@ -47,11 +47,13 @@ class AppRouter {
       ),
       GoRoute(
         path: AppRoutePaths.detailNote,
-        builder: (context, state) => const NoteDetailScreen(),
+        builder: (context, state) =>
+            NoteDetailScreen(noteId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: AppRoutePaths.editNote,
-        builder: (context, state) => const EditNoteScreen(),
+        builder: (context, state) =>
+            EditNoteScreen(noteId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: AppRoutePaths.scanner,

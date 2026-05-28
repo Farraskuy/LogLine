@@ -1,4 +1,4 @@
-﻿name: logline
+name: logline
 description: Offline-first Flutter logbook and notes app with Markdown, Hive, MongoDB Atlas sync, collaborators, and YOLO-powered camera-to-text OCR.
 publish_to: 'none'
 version: 1.0.0+1
@@ -14,6 +14,7 @@ dependencies:
   connectivity_plus: ^7.0.0
   flutter_markdown: ^0.7.7+1
   go_router: ^17.0.0
+  google_fonts: ^6.3.3
   flutter_secure_storage: ^10.0.0-beta.4
   google_mlkit_text_recognition: ^0.15.0
   hive: ^2.2.3
@@ -26,6 +27,7 @@ dependencies:
   tflite_flutter: ^0.12.1
   uuid: ^4.5.2
   workmanager: ^0.9.0+3
+  mongo_dart: ^0.10.8
 
 dev_dependencies:
   flutter_test:
@@ -36,4 +38,3 @@ flutter:
   uses-material-design: true
   assets:
     - assets/models/
-

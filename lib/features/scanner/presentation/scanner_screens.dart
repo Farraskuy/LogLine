@@ -1,27 +1,92 @@
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../../core/router/app_route_paths.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/logline_button.dart';
 import '../../../shared/widgets/logline_scaffold.dart';
 
-class ScannerScreen extends StatelessWidget {
+class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});
+
+  @override
+  State<ScannerScreen> createState() => _ScannerScreenState();
+}
+
+class _ScannerScreenState extends State<ScannerScreen> {
+  CameraController? _controller;
+  Future<void>? _cameraFuture;
+  String? _lastCapturePath;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _cameraFuture = _initializeCamera();
+  }
+
+  Future<void> _initializeCamera() async {
+    try {
+      final permission = await Permission.camera.request();
+      if (!permission.isGranted) {
+        setState(() => _errorMessage = 'Izin kamera belum diberikan.');
+        return;
+      }
+      final cameras = await availableCameras();
+      if (cameras.isEmpty) {
+        setState(
+          () => _errorMessage = 'Kamera tidak ditemukan di perangkat ini.',
+        );
+        return;
+      }
+      final backCamera = cameras.firstWhere(
+        (camera) => camera.lensDirection == CameraLensDirection.back,
+        orElse: () => cameras.first,
+      );
+      final controller = CameraController(
+        backCamera,
+        ResolutionPreset.high,
+        enableAudio: false,
+      );
+      await controller.initialize();
+      if (!mounted) {
+        await controller.dispose();
+        return;
+      }
+      setState(() => _controller = controller);
+    } catch (error) {
+      if (mounted) setState(() => _errorMessage = error.toString());
+    }
+  }
+
+  Future<void> _capture() async {
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) return;
+    final file = await controller.takePicture();
+    if (mounted) setState(() => _lastCapturePath = file.path);
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return LogLineScaffold(
-      currentIndex: 2,
+      currentIndex: 1,
       backgroundColor: AppColors.camera,
       child: ListView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 140),
         children: [
           const Row(
             children: [
               Expanded(
                 child: Text(
-                  'Camera to Text',
+                  'Kamera',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 26,
@@ -33,71 +98,26 @@ class ScannerScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
-          Container(
-            height: 430,
-            padding: const EdgeInsets.all(34),
-            decoration: BoxDecoration(
-              color: const Color(0xFF111827),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: const Color(0xFF334155)),
-            ),
-            child: Stack(
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+          FutureBuilder<void>(
+            future: _cameraFuture,
+            builder: (context, snapshot) {
+              if (_errorMessage != null) {
+                return _CameraPlaceholder(message: _errorMessage!);
+              }
+              final controller = _controller;
+              if (snapshot.connectionState == ConnectionState.waiting ||
+                  controller == null ||
+                  !controller.value.isInitialized) {
+                return const _CameraLoading();
+              }
+              return ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: AspectRatio(
+                  aspectRatio: controller.value.aspectRatio,
+                  child: CameraPreview(controller),
                 ),
-                Positioned(
-                  top: 44,
-                  left: 36,
-                  child: Text(
-                    'INVOICE A-104',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.ink,
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 100,
-                  left: 36,
-                  right: 36,
-                  child: _Highlight(
-                    label: 'Valve A-104  |  Tekanan 18 bar',
-                    color: Color(0xFFFDE68A),
-                  ),
-                ),
-                Positioned(
-                  top: 156,
-                  left: 36,
-                  right: 70,
-                  child: _Highlight(
-                    label: 'No. dokumen: 8M-21',
-                    color: Color(0xFFBAE6FD),
-                  ),
-                ),
-                Positioned(
-                  top: 212,
-                  left: 36,
-                  right: 40,
-                  child: _Highlight(
-                    label: 'Tanggal inspeksi: 16/05/2026',
-                    color: Color(0xFFBBF7D0),
-                  ),
-                ),
-                Positioned.fill(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.cyanAccent, width: 3),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              );
+            },
           ),
           const SizedBox(height: 24),
           Container(
@@ -110,30 +130,46 @@ class ScannerScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Teks terdeteksi',
+                  'Ambil gambar',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
                 ),
                 const Text(
-                  '3 blok teks siap dipilih',
+                  'OCR belum dijalankan. Kamera hanya mengambil gambar terlebih dahulu.',
                   style: TextStyle(color: AppColors.muted),
                 ),
-                const SizedBox(height: 18),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.background,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.border),
+                if (_lastCapturePath != null) ...[
+                  const SizedBox(height: 18),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.background,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Text('Foto tersimpan sementara:\n$_lastCapturePath'),
                   ),
-                  child: const Text(
-                    'Valve A-104, tekanan 18 bar. No. dokumen 8M-21. Tanggal inspeksi 16/05/2026.',
-                  ),
-                ),
+                ],
                 const SizedBox(height: 18),
-                LogLineButton(
-                  label: 'Sisipkan ke Note',
-                  variant: LogLineButtonVariant.success,
-                  onPressed: () => context.go(AppRoutePaths.ocrResult),
+                Row(
+                  children: [
+                    Expanded(
+                      child: LogLineButton(
+                        label: 'Ambil foto',
+                        variant: LogLineButtonVariant.success,
+                        icon: Icons.camera_alt_outlined,
+                        onPressed: _capture,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: LogLineButton(
+                        label: 'Tambah Note',
+                        variant: LogLineButtonVariant.secondary,
+                        onPressed: () => context.go(AppRoutePaths.addNote),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -154,13 +190,13 @@ class OcrResultScreen extends StatelessWidget {
       showBack: true,
       actions: [
         TextButton(
-          onPressed: () => context.go(AppRoutePaths.detailNote),
+          onPressed: () => context.go(AppRoutePaths.addNote),
           child: const Text('Tambah'),
         ),
       ],
-      currentIndex: 2,
+      currentIndex: 1,
       child: ListView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 140),
         children: [
           Container(
             height: 156,
@@ -176,57 +212,18 @@ class OcrResultScreen extends StatelessWidget {
           ),
           const SizedBox(height: 28),
           const Text(
-            'Pilih tujuan',
+            'OCR belum aktif',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 12),
-          InkWell(
-            onTap: () => context.go(AppRoutePaths.detailNote),
-            child: Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.primary),
-              ),
-              child: const Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Audit gudang mingguan',
-                          style: TextStyle(fontWeight: FontWeight.w900),
-                        ),
-                        Text(
-                          'Sisipkan sebagai lampiran Markdown',
-                          style: TextStyle(color: AppColors.muted),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(Icons.check_circle, color: AppColors.primary),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: const Text(
-              '```text\nValve A-104, tekanan 18 bar\nNo. dokumen 8M-21\nTanggal inspeksi 16/05/2026\n```',
-            ),
+          const Text(
+            'Halaman ini disiapkan untuk integrasi OCR berikutnya. Untuk sekarang gunakan kamera untuk mengambil gambar lalu buat note manual.',
+            style: TextStyle(color: AppColors.muted, height: 1.45),
           ),
           const SizedBox(height: 28),
           LogLineButton(
-            label: 'Sisipkan sekarang',
-            onPressed: () => context.go(AppRoutePaths.detailNote),
+            label: 'Buat note baru',
+            onPressed: () => context.go(AppRoutePaths.addNote),
           ),
         ],
       ),
@@ -246,28 +243,63 @@ class _LiveBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
       ),
       child: const Text(
-        'Realtime OCR',
+        'Camera',
         style: TextStyle(color: Color(0xFF5EEAD4), fontWeight: FontWeight.w800),
       ),
     );
   }
 }
 
-class _Highlight extends StatelessWidget {
-  const _Highlight({required this.label, required this.color});
-
-  final String label;
-  final Color color;
+class _CameraLoading extends StatelessWidget {
+  const _CameraLoading();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      height: 430,
+      alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(6),
+        color: const Color(0xFF111827),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFF334155)),
       ),
-      child: Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
+      child: const CircularProgressIndicator(color: Colors.white),
+    );
+  }
+}
+
+class _CameraPlaceholder extends StatelessWidget {
+  const _CameraPlaceholder({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 430,
+      padding: const EdgeInsets.all(24),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: const Color(0xFF111827),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFF334155)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.no_photography_outlined,
+            color: Colors.white,
+            size: 54,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.white70),
+          ),
+        ],
+      ),
     );
   }
 }

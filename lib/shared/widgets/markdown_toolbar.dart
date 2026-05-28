@@ -2,17 +2,21 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
 
+enum MarkdownTool { bold, italic, heading, checklist, quote, code, link }
+
 class MarkdownToolbar extends StatelessWidget {
-  const MarkdownToolbar({super.key});
+  const MarkdownToolbar({super.key, required this.onSelected});
+
+  final ValueChanged<MarkdownTool> onSelected;
 
   static const _tools = [
-    (Icons.format_bold_rounded, 'Bold'),
-    (Icons.format_italic_rounded, 'Italic'),
-    (Icons.title_rounded, 'Heading'),
-    (Icons.check_box_outlined, 'Checklist'),
-    (Icons.format_quote_rounded, 'Quote'),
-    (Icons.code_rounded, 'Code'),
-    (Icons.link_rounded, 'Link'),
+    (MarkdownTool.bold, Icons.format_bold_rounded, 'Bold'),
+    (MarkdownTool.italic, Icons.format_italic_rounded, 'Italic'),
+    (MarkdownTool.heading, Icons.title_rounded, 'Heading'),
+    (MarkdownTool.checklist, Icons.check_box_outlined, 'Checklist'),
+    (MarkdownTool.quote, Icons.format_quote_rounded, 'Quote'),
+    (MarkdownTool.code, Icons.code_rounded, 'Code'),
+    (MarkdownTool.link, Icons.link_rounded, 'Link'),
   ];
 
   @override
@@ -30,10 +34,10 @@ class MarkdownToolbar extends StatelessWidget {
         itemBuilder: (context, index) {
           final tool = _tools[index];
           return Tooltip(
-            message: tool.$2,
+            message: tool.$3,
             child: IconButton(
-              onPressed: () {},
-              icon: Icon(tool.$1, size: 20),
+              onPressed: () => onSelected(tool.$1),
+              icon: Icon(tool.$2, size: 20),
               color: index == 0 ? AppColors.primary : AppColors.muted,
             ),
           );

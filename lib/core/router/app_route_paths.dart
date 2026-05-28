@@ -9,10 +9,13 @@ class AppRoutePaths {
   static const resetPassword = '/auth/reset-password';
   static const notes = '/notes';
   static const addNote = '/notes/add';
-  static const detailNote = '/notes/detail';
-  static const editNote = '/notes/edit';
+  static const detailNote = '/notes/:id';
+  static const editNote = '/notes/:id/edit';
   static const scanner = '/scanner';
   static const ocrResult = '/scanner/result';
   static const collaborators = '/notes/collaborators';
   static const profile = '/profile';
+
+  static String noteDetail(String id) => '/notes/$id';
+  static String noteEdit(String id) => '/notes/$id/edit';
 }

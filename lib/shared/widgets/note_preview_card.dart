@@ -16,7 +16,7 @@ class NotePreviewCard extends StatelessWidget {
     final accent = Color(note.accentHex);
     return InkWell(
       borderRadius: BorderRadius.circular(8),
-      onTap: () => context.go(AppRoutePaths.detailNote),
+      onTap: () => context.go(AppRoutePaths.noteDetail(note.id)),
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surface,
