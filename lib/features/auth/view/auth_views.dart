@@ -7,14 +7,14 @@ import '../../../services/auth_service.dart';
 import '../../../shared/widgets/logline_button.dart';
 import '../../../shared/widgets/logline_text_field.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class LoginView extends StatefulWidget {
+  const LoginView({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<LoginView> createState() => _LoginViewState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginViewState extends State<LoginView> {
   final AuthService _authService = AuthService();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -84,14 +84,14 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+class RegisterView extends StatefulWidget {
+  const RegisterView({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  State<RegisterView> createState() => _RegisterViewState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterViewState extends State<RegisterView> {
   final AuthService _authService = AuthService();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -158,8 +158,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 }
 
-class ForgotPasswordScreen extends StatelessWidget {
-  const ForgotPasswordScreen({super.key});
+class ForgotPasswordView extends StatelessWidget {
+  const ForgotPasswordView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -190,8 +190,8 @@ class ForgotPasswordScreen extends StatelessWidget {
   }
 }
 
-class OtpScreen extends StatelessWidget {
-  const OtpScreen({super.key});
+class OtpView extends StatelessWidget {
+  const OtpView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -225,8 +225,8 @@ class OtpScreen extends StatelessWidget {
   }
 }
 
-class ResetPasswordScreen extends StatelessWidget {
-  const ResetPasswordScreen({super.key});
+class ResetPasswordView extends StatelessWidget {
+  const ResetPasswordView({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:image/image.dart' as img;
@@ -8,36 +9,51 @@ class YoloTextDetectorService {
     this.modelAssetPath = 'assets/models/yolo_text_detector.tflite',
     this.inputSize = 640,
     this.confidenceThreshold = 0.35,
+    this.iouThreshold = 0.45,
   });
 
   final String modelAssetPath;
   final int inputSize;
   final double confidenceThreshold;
+  final double iouThreshold;
 
   Interpreter? _interpreter;
+  Object? _loadError;
 
   bool get isLoaded => _interpreter != null;
+  bool get isAvailable => _interpreter != null && _loadError == null;
+  Object? get loadError => _loadError;
 
-  Future<void> load() async {
-    _interpreter ??= await Interpreter.fromAsset(modelAssetPath);
+  Future<bool> load() async {
+    if (_interpreter != null) return true;
+    try {
+      _interpreter = await Interpreter.fromAsset(modelAssetPath);
+      _loadError = null;
+      return true;
+    } catch (error) {
+      _loadError = error;
+      return false;
+    }
   }
 
   Future<List<TextDetectionBox>> detectTextRegions(Uint8List imageBytes) async {
-    await load();
+    final loaded = await load();
+    if (!loaded || _interpreter == null) return const [];
 
     final source = img.decodeImage(imageBytes);
     if (source == null) return const [];
 
-    // TODO: Match preprocessing and output decoding to the YOLO model you train/export.
-    // This placeholder keeps the service API ready while the final model contract is decided.
     final resized = img.copyResize(source, width: inputSize, height: inputSize);
     final input = _imageToFloat32(resized);
-    final output = List.generate(1, (_) => List.filled(84 * 8400, 0.0));
+    final outputTensor = _interpreter!.getOutputTensor(0);
+    final outputShape = outputTensor.shape;
+    final output = _createOutputBuffer(outputShape);
 
     _interpreter!.run(input, output);
 
     return _decodeYoloOutput(
       output: output,
+      shape: outputShape,
       originalWidth: source.width,
       originalHeight: source.height,
     );
@@ -57,13 +73,104 @@ class YoloTextDetectorService {
     return buffer.reshape([1, inputSize, inputSize, 3]);
   }
 
+  Object _createOutputBuffer(List<int> shape) {
+    if (shape.length == 3) {
+      return List.generate(
+        shape[0],
+        (_) => List.generate(shape[1], (_) => List.filled(shape[2], 0.0)),
+      );
+    }
+    if (shape.length == 2) {
+      return List.generate(shape[0], (_) => List.filled(shape[1], 0.0));
+    }
+    return List.filled(shape.reduce((a, b) => a * b), 0.0);
+  }
+
   List<TextDetectionBox> _decodeYoloOutput({
-    required List<List<double>> output,
+    required Object output,
+    required List<int> shape,
     required int originalWidth,
     required int originalHeight,
   }) {
-    // Replace with model-specific YOLO decoding and NMS.
+    final rows = _flattenDetections(output, shape);
+    final boxes = <TextDetectionBox>[];
+
+    for (final row in rows) {
+      if (row.length < 5) continue;
+      final cx = row[0];
+      final cy = row[1];
+      final w = row[2];
+      final h = row[3];
+      final confidence = row.sublist(4).reduce(math.max);
+      if (confidence < confidenceThreshold) continue;
+
+      final scaleX = originalWidth / inputSize;
+      final scaleY = originalHeight / inputSize;
+      final left = ((cx - w / 2) * scaleX).clamp(0.0, originalWidth.toDouble());
+      final top = ((cy - h / 2) * scaleY).clamp(0.0, originalHeight.toDouble());
+      final width = (w * scaleX).clamp(1.0, originalWidth - left);
+      final height = (h * scaleY).clamp(1.0, originalHeight - top);
+
+      boxes.add(
+        TextDetectionBox(
+          left: left,
+          top: top,
+          width: width,
+          height: height,
+          confidence: confidence,
+        ),
+      );
+    }
+
+    boxes.sort((a, b) => b.confidence.compareTo(a.confidence));
+    return _nonMaxSuppression(boxes);
+  }
+
+  List<List<double>> _flattenDetections(Object output, List<int> shape) {
+    if (output is List && output.isNotEmpty && output.first is List) {
+      final batch = output.first;
+      if (batch is List && batch.isNotEmpty && batch.first is List) {
+        final matrix = batch.cast<List>();
+        final rows = matrix
+            .map((row) => row.map((v) => (v as num).toDouble()).toList())
+            .toList();
+        if (shape.length == 3 && shape[1] <= 16 && shape[2] > shape[1]) {
+          return _transpose(rows);
+        }
+        return rows;
+      }
+    }
     return const [];
+  }
+
+  List<List<double>> _transpose(List<List<double>> matrix) {
+    if (matrix.isEmpty) return const [];
+    final rows = matrix.length;
+    final cols = matrix.first.length;
+    return List.generate(
+      cols,
+      (col) => List.generate(rows, (row) => matrix[row][col]),
+    );
+  }
+
+  List<TextDetectionBox> _nonMaxSuppression(List<TextDetectionBox> boxes) {
+    final selected = <TextDetectionBox>[];
+    for (final box in boxes) {
+      final overlaps = selected.any((kept) => _iou(box, kept) > iouThreshold);
+      if (!overlaps) selected.add(box);
+      if (selected.length >= 12) break;
+    }
+    return selected;
+  }
+
+  double _iou(TextDetectionBox a, TextDetectionBox b) {
+    final x1 = math.max(a.left, b.left);
+    final y1 = math.max(a.top, b.top);
+    final x2 = math.min(a.left + a.width, b.left + b.width);
+    final y2 = math.min(a.top + a.height, b.top + b.height);
+    final intersection = math.max(0.0, x2 - x1) * math.max(0.0, y2 - y1);
+    final union = a.width * a.height + b.width * b.height - intersection;
+    return union <= 0 ? 0 : intersection / union;
   }
 
   void dispose() {

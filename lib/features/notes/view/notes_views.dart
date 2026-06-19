@@ -16,14 +16,14 @@ import '../data/logline_note.dart';
 import '../data/notes_repository.dart';
 import '../data/notes_search_filter.dart';
 
-class NotesListScreen extends StatefulWidget {
-  const NotesListScreen({super.key});
+class NotesListView extends StatefulWidget {
+  const NotesListView({super.key});
 
   @override
-  State<NotesListScreen> createState() => _NotesListScreenState();
+  State<NotesListView> createState() => _NotesListViewState();
 }
 
-class _NotesListScreenState extends State<NotesListScreen> {
+class _NotesListViewState extends State<NotesListView> {
   final NotesRepository _repository = NotesRepository();
   final TextEditingController _searchController = TextEditingController();
   late Future<List<LogLineNote>> _notesFuture;
@@ -168,17 +168,23 @@ class _NotesListScreenState extends State<NotesListScreen> {
   }
 }
 
-class AddNoteScreen extends StatelessWidget {
-  const AddNoteScreen({super.key});
+class AddNoteView extends StatelessWidget {
+  const AddNoteView({super.key, this.initialContent});
+
+  final String? initialContent;
 
   @override
   Widget build(BuildContext context) {
-    return const _EditorFrame(title: 'Tambah Note', actionLabel: 'Simpan');
+    return _EditorFrame(
+      title: 'Tambah Note',
+      actionLabel: 'Simpan',
+      initialContent: initialContent,
+    );
   }
 }
 
-class EditNoteScreen extends StatelessWidget {
-  const EditNoteScreen({super.key, required this.noteId});
+class EditNoteView extends StatelessWidget {
+  const EditNoteView({super.key, required this.noteId});
 
   final String noteId;
 
@@ -197,11 +203,13 @@ class _EditorFrame extends StatefulWidget {
     required this.title,
     required this.actionLabel,
     this.noteId,
+    this.initialContent,
   });
 
   final String title;
   final String actionLabel;
   final String? noteId;
+  final String? initialContent;
 
   @override
   State<_EditorFrame> createState() => _EditorFrameState();
@@ -213,10 +221,7 @@ class _EditorFrameState extends State<_EditorFrame> {
   final TextEditingController _tagController = TextEditingController(
     text: 'Personal',
   );
-  final TextEditingController _bodyController = TextEditingController(
-    text:
-        '# Judul logbook\n\nTulis ringkasan, checklist, atau tempel hasil OCR di sini.',
-  );
+  late final TextEditingController _bodyController;
   LogLineNote? _loadedNote;
   List<String> _collaborators = const [];
   bool _loading = true;
@@ -225,6 +230,11 @@ class _EditorFrameState extends State<_EditorFrame> {
   @override
   void initState() {
     super.initState();
+    _bodyController = TextEditingController(
+      text:
+          widget.initialContent ??
+          '# Judul logbook\\n\\nTulis ringkasan, checklist, atau tempel hasil OCR di sini.',
+    );
     _load();
   }
 
@@ -478,16 +488,16 @@ class _EditorFrameState extends State<_EditorFrame> {
   }
 }
 
-class NoteDetailScreen extends StatefulWidget {
-  const NoteDetailScreen({super.key, required this.noteId});
+class NoteDetailView extends StatefulWidget {
+  const NoteDetailView({super.key, required this.noteId});
 
   final String noteId;
 
   @override
-  State<NoteDetailScreen> createState() => _NoteDetailScreenState();
+  State<NoteDetailView> createState() => _NoteDetailViewState();
 }
 
-class _NoteDetailScreenState extends State<NoteDetailScreen> {
+class _NoteDetailViewState extends State<NoteDetailView> {
   final NotesRepository _repository = NotesRepository();
   late Future<LogLineNote?> _noteFuture;
 

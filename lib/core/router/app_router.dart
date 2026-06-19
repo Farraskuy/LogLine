@@ -1,10 +1,10 @@
 import 'package:go_router/go_router.dart';
 
-import '../../features/auth/presentation/auth_screens.dart';
-import '../../features/notes/presentation/notes_screens.dart';
-import '../../features/onboarding/presentation/onboarding_screen.dart';
-import '../../features/profile/presentation/profile_screen.dart';
-import '../../features/scanner/presentation/scanner_screens.dart';
+import '../../features/auth/view/auth_views.dart';
+import '../../features/notes/view/notes_views.dart';
+import '../../features/onboarding/view/onboarding_view.dart';
+import '../../features/profile/view/profile_view.dart';
+import '../../features/scanner/view/scanner_views.dart';
 import 'app_route_paths.dart';
 
 class AppRouter {
@@ -15,57 +15,59 @@ class AppRouter {
     routes: [
       GoRoute(
         path: AppRoutePaths.onboarding,
-        builder: (context, state) => const OnboardingScreen(),
+        builder: (context, state) => const OnboardingView(),
       ),
       GoRoute(
         path: AppRoutePaths.login,
-        builder: (context, state) => const LoginScreen(),
+        builder: (context, state) => const LoginView(),
       ),
       GoRoute(
         path: AppRoutePaths.register,
-        builder: (context, state) => const RegisterScreen(),
+        builder: (context, state) => const RegisterView(),
       ),
       GoRoute(
         path: AppRoutePaths.forgotPassword,
-        builder: (context, state) => const ForgotPasswordScreen(),
+        builder: (context, state) => const ForgotPasswordView(),
       ),
       GoRoute(
         path: AppRoutePaths.otp,
-        builder: (context, state) => const OtpScreen(),
+        builder: (context, state) => const OtpView(),
       ),
       GoRoute(
         path: AppRoutePaths.resetPassword,
-        builder: (context, state) => const ResetPasswordScreen(),
+        builder: (context, state) => const ResetPasswordView(),
       ),
       GoRoute(
         path: AppRoutePaths.notes,
-        builder: (context, state) => const NotesListScreen(),
+        builder: (context, state) => const NotesListView(),
       ),
       GoRoute(
         path: AppRoutePaths.addNote,
-        builder: (context, state) => const AddNoteScreen(),
+        builder: (context, state) => AddNoteView(
+          initialContent: state.extra is String ? state.extra as String : null,
+        ),
       ),
       GoRoute(
         path: AppRoutePaths.detailNote,
         builder: (context, state) =>
-            NoteDetailScreen(noteId: state.pathParameters['id']!),
+            NoteDetailView(noteId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: AppRoutePaths.editNote,
         builder: (context, state) =>
-            EditNoteScreen(noteId: state.pathParameters['id']!),
+            EditNoteView(noteId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: AppRoutePaths.scanner,
-        builder: (context, state) => const ScannerScreen(),
+        builder: (context, state) => const ScannerView(),
       ),
       GoRoute(
         path: AppRoutePaths.ocrResult,
-        builder: (context, state) => const OcrResultScreen(),
+        builder: (context, state) => const OcrResultView(),
       ),
       GoRoute(
         path: AppRoutePaths.profile,
-        builder: (context, state) => const ProfileScreen(),
+        builder: (context, state) => const ProfileView(),
       ),
     ],
   );

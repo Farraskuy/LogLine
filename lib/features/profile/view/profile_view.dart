@@ -7,14 +7,14 @@ import '../../../services/auth_service.dart';
 import '../../../services/sync_queue_service.dart';
 import '../../../shared/widgets/logline_scaffold.dart';
 
-class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+class ProfileView extends StatefulWidget {
+  const ProfileView({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  State<ProfileView> createState() => _ProfileViewState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileViewState extends State<ProfileView> {
   final AuthService _authService = AuthService();
   final SyncQueueService _syncQueueService = SyncQueueService();
   late Future<Map<String, dynamic>?> _userFuture;
